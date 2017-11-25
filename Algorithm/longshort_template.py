@@ -59,7 +59,7 @@ class Momentum(CustomFactor):
 
     def compute(self, today, assets, out, prices):
         out[:] = ((prices[-21] - prices[-252])/prices[-252] -
-                  (prices[-1] - prices[-21])/prices[-21])
+                  (.notnull()prices[-1] - prices[-21])/prices[-21])
 
 def make_pipeline():
     """
@@ -84,8 +84,9 @@ def make_pipeline():
     # Screen out non-desirable securities by defining our universe. 
     # Removes ADRs, OTCs, non-primary shares, LP, etc.
     # Also sets a minimum $500MM market cap filter and $5 price filter
-    mkt_cap_filter = morningstar.valuation.market_cap.latest >= 500000000    
+    mkt_cap_filter = morningstar.valuation.market_cap.latest >= 500000000 
     price_filter = USEquityPricing.close.latest >= 5
+    
     universe = Q1500US() & price_filter & mkt_cap_filter
 
     # Construct a Factor representing the rank of each asset by our momentum,

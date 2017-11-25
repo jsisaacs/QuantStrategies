@@ -1,5 +1,3 @@
-# Joshua Isaacson
-
 # This algorithm implements the long-short equity strategy ranked on the 
 # 30 day Sentiment Moving Average.
 
@@ -32,13 +30,17 @@ MAX_SECTOR_EXPOSURE = 0.10
 MAX_BETA_EXPOSURE = 0.20
         
 def make_pipeline():
-
+    
+    # Sector
+    sector = Sector()
+   
     # Equity Filters
     mkt_cap_filter = morningstar.valuation.market_cap.latest >= 500000000 
     price_filter = USEquityPricing.close.latest >= 5
+    nan_filter = sentiment_free.sentiment_signal.latest.notnull()
     
     # Universe
-    universe = Q1500US() & price_filter & mkt_cap_filter
+    universe = Q1500US() & price_filter & mkt_cap_filter & nan_filter
 
     # Rank
     sentiment_signal = sentiment_free.sentiment_signal.latest
@@ -47,7 +49,7 @@ def make_pipeline():
                      window_length=30, mask=universe)
     
     combined_rank = (
-        sentiment_signal.rank(mask=universe).zscore() +
+        sentiment_signal +
         sma_30.rank(mask=universe).zscore())
 
     # Long and Short Positions
@@ -66,11 +68,10 @@ def make_pipeline():
     pipe = Pipeline()
     pipe.add(longs, 'longs')
     pipe.add(shorts, 'shorts')
-    #pipe.add(stocktwits.bearish_intensity.latest, 'bearish_intensity')
-    #pipe.add(stocktwits.bullish_intensity.latest, 'bullish_intensity')
+    pipe.add(combined_rank, 'combined_rank')
     pipe.add(sentiment_free.sentiment_signal.latest, 'sentiment_signal')
     pipe.add(sma_30, 'sma_30')
-    pipe.add(Sector(), 'Sector')
+    pipe.add(sector, 'sector')
     pipe.add(beta, 'market_beta')
     pipe.set_screen(universe)
     
