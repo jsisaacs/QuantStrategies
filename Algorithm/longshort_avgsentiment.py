@@ -30,7 +30,7 @@ def initialize(context):
     context.longs = None
     context.shorts = None
     
-    schedule_function(rebalance, date_rules.every_day(),                                   time_rules.market_open(hours=1))
+    schedule_function(rebalance, date_rules.every_day(), time_rules.market_open(hours=1))
     set_commission(commission.PerShare(cost=0, min_trade_cost=0))
     set_slippage(slippage.FixedSlippage(spread=0))
     
@@ -61,7 +61,7 @@ def handle_data(context, data):
     
 def rebalance(context, data):
     
-    for security in context.shorts.index:
+    for secuhttps://www.quantopian.com/algorithmsrity in context.shorts.index:
         if get_open_orders(security):
             continue
         if security in data:
@@ -77,6 +77,6 @@ def rebalance(context, data):
         if get_open_orders(security):
             continue
         if security in data:
-            if security not in (context.longs.index |                                     context.shorts.index):
+            if security not in (context.longs.index | context.shorts.index):
                     order_target_percent(security, 0)
 
